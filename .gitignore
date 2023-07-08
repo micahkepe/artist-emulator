@@ -1,6 +1,16 @@
 # node modules
 node_modules
 
+# data (for now)
+data
+
+# vscode settings
+.vscode
+
+# dependencies
+/.pnp
+.pnp.js
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
