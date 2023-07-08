@@ -1,0 +1,11 @@
+{
+  "name": "artist-emulator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/micahkepe/artist-emulator.git",
+  "author": "micahkepe",
+  "license": "MIT",
+  "dependencies": {
+    "@spotify/basic-pitch": "^1.0.1"
+  }
+}
