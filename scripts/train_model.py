@@ -55,7 +55,7 @@ model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metri
 logging.info("Model compiled.")
 
 # Define callbacks
-checkpoint = ModelCheckpoint(f'data/{artist}/models/model.h5', monitor='val_loss', save_best_only=True, mode='min')
+checkpoint = ModelCheckpoint(f'data/{artist}/models/my_model.keras', monitor='val_loss', save_best_only=True, mode='min')
 early_stopping = EarlyStopping(monitor='val_loss', patience=10, mode='min')
 lr_scheduler = LearningRateScheduler(lambda epoch, lr: lr * 0.95)  # Adjust the learning rate during training
 logging.info("Callbacks defined.")
