@@ -10,6 +10,7 @@
   },
   "scripts": {
     "convertToMIDI": "python3 scripts/convertToMIDI.py",
-    "preprocessMIDI": "python3 scripts/preprocessMIDI.py"
+    "preprocessMIDI": "python3 scripts/preprocessMIDI.py",
+    "train-model": "python3 scripts/train_model.py"
   }
 }

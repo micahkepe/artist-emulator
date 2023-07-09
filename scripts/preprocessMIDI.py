@@ -68,6 +68,13 @@ for i in range(len(notes_encoded) - sequence_length):
 
 # Split the data into training and testing sets
 logging.info("Splitting data into training and testing sets...")
+
+# Reshape the data for LSTM
+inputs = np.array(inputs)
+inputs = np.reshape(inputs, (inputs.shape[0], inputs.shape[1], 1))
+outputs = np.array(outputs)
+
+# Split the data
 inputs_train, inputs_test, outputs_train, outputs_test = train_test_split(inputs, outputs, test_size=test_split, random_state=42)
 
 # Save the preprocessed data
