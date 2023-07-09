@@ -9,6 +9,7 @@
     "@spotify/basic-pitch": "^1.0.1"
   },
   "scripts": {
-    "convertToMIDI": "python3 scripts/convertToMIDI.py"
+    "convertToMIDI": "python3 scripts/convertToMIDI.py",
+    "preprocessMIDI": "python3 scripts/preprocessMIDI.py"
   }
 }
