@@ -33,7 +33,7 @@ for filename in os.listdir(input_directory):
             logging.info(f"Parsing {filename}...")
 
             # Extracting notes and attributes
-            for element in piece.flat:
+            for element in piece.flatten():
                 if isinstance(element, note.Note):
                     notes.append(str(element.pitch))
                     durations.append(element.duration.quarterLength)
