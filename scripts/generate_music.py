@@ -6,6 +6,8 @@ from music21 import note, chord, stream, instrument
 from sklearn.preprocessing import LabelEncoder
 
 def generate_music(artist, output_path):
+    artist = artist.lower()
+
     # Parameters
     sequence_length = 100
     output_notes_length = 500
@@ -16,12 +18,12 @@ def generate_music(artist, output_path):
 
     # Load the encoding/decoding info
     note_encoder = LabelEncoder()  # Initialize a new encoder
-    note_encoder.classes_ = np.load('note_classes.npy')  # Load the classes
+    note_encoder.classes_ = np.load(f'data/{artist}/processed/note_encoder.npy')  # Load the classes
 
     # Load a seed sequence
-    seed_path = 'seed.npz'  # Adjust this as necessary
+    seed_path = f'data/{artist}/seed/seed.npy'  # Adjust this as necessary
     seed_data = np.load(seed_path)
-    seed_sequence = seed_data['inputs_train'][0]
+    seed_sequence = seed_data[-sequence_length:]
 
     # Generate music
     output_notes = []
@@ -37,7 +39,9 @@ def generate_music(artist, output_path):
         output_notes.append(result)
 
         # Shift the seed sequence
-        seed_sequence = np.vstack((seed_sequence[1:], result))
+        result_array = np.zeros((1, 5))
+        result_array[0, 0] = index # Store the predicted note
+        seed_sequence = np.vstack((seed_sequence[1:], result_array))
 
     # Convert the output from tokens to note/chord objects
     output_score = stream.Score()
@@ -52,6 +56,11 @@ def generate_music(artist, output_path):
                 notes.append(new_note)
             new_chord = chord.Chord(notes)
             output_score.append(new_chord)
+        # pattern is a rest
+        elif pattern[0] == 'Rest':
+            new_rest = note.Rest()
+            new_rest.storedInstrument = instrument.Piano()
+            output_score.append(new_rest)
         # pattern is a note
         else:
             new_note = note.Note(pattern[0])

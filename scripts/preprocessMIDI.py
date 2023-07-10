@@ -63,6 +63,10 @@ logging.info("Performing integer encoding...")
 note_encoder = LabelEncoder()
 notes_encoded = note_encoder.fit_transform(notes)
 
+# Save the encoding
+logging.info("Saving the encoding...")
+np.save(os.path.join(output_directory, 'note_encoder.npy'), note_encoder.classes_)
+
 # Normalization of durations and intensities
 logging.info("Performing normalization...")
 scaler = MinMaxScaler()
