@@ -18,7 +18,7 @@ artist = sys.argv[1].lower()
 
 # Load the data
 logging.info(f"Loading data for {artist}...")
-data = np.load(f'data/{artist}/processed/processed.npz')
+data = np.load(f'data/{artist}/processed/processed.npz', allow_pickle=True)
 inputs_train = data['inputs_train']
 inputs_test = data['inputs_test']
 outputs_train = data['outputs_train']
@@ -37,47 +37,48 @@ print('Number of labels:', number_of_labels)
 num_epochs = 10
 batch_size = 64
 num_classes = number_of_labels
-learning_rate = 0.001
+initial_learning_rate = 0.001
 
 model = Sequential()
 print('Inputs Train shape:', inputs_train.shape)
-model.add(LSTM(512, input_shape=(inputs_train.shape[1], inputs_train.shape[2]), return_sequences=True, recurrent_dropout=0.3))
-model.add(Dropout(0.3))
-model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.3))
-model.add(Dropout(0.3))
-model.add(LSTM(512, recurrent_dropout=0.3))
+model.add(LSTM(512, input_shape=(inputs_train.shape[1], inputs_train.shape[2]), return_sequences=True, dropout=0.3))
+model.add(LSTM(512, return_sequences=True, dropout=0.3))
+model.add(LSTM(512, dropout=0.3))
 model.add(Dense(num_classes, activation='softmax'))
 logging.info(model.summary())
 
+# Learning rate decay schedule
+lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(initial_learning_rate, decay_steps=100000, decay_rate=0.96, staircase=True)
+
 # Compile the model
-optimizer = Adam(learning_rate=learning_rate)
-model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+model.compile(loss='sparse_categorical_crossentropy', optimizer=tf.keras.optimizers.legacy.Adam(learning_rate=lr_schedule), metrics=['accuracy'])
 logging.info("Model compiled.")
 
 # Define callbacks
-checkpoint = ModelCheckpoint(f'data/{artist}/models/my_model.keras', monitor='val_loss', save_best_only=True, mode='min')
-early_stopping = EarlyStopping(monitor='val_loss', patience=10, mode='min')
-lr_scheduler = LearningRateScheduler(lambda epoch, lr: lr * 0.95)  # Adjust the learning rate during training
+checkpoint = ModelCheckpoint(f'data/{artist}/models/model.h5', monitor='val_loss', save_best_only=True, mode='min')
+early_stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, mode='min')
+callbacks_list = [checkpoint, early_stopping]
 logging.info("Callbacks defined.")
 
 # Train the model
 history = model.fit(inputs_train, outputs_train, validation_data=(inputs_val, outputs_val),
-                    epochs=num_epochs, batch_size=batch_size, callbacks=[checkpoint, early_stopping, lr_scheduler])
+                    epochs=num_epochs, batch_size=batch_size, callbacks=callbacks_list, verbose=1)
 logging.info("Model trained.")
 
 # Evaluate the model
 model.evaluate(inputs_test, outputs_test, batch_size=batch_size)
+
+# Save the model
+model.save(f'data/{artist}/models/model.h5')
 
 # Save the history
 np.savez(f'data/{artist}/history/history.npz', loss=history.history['loss'], val_loss=history.history['val_loss'])
 logging.info("History saved.")
 
 # Plot the loss
-loss = history.history['loss']
-val_loss = history.history['val_loss']
-epochs = range(len(loss))
-plt.plot(epochs, loss, 'b', label='Training loss')
-plt.plot(epochs, val_loss, 'r', label='Validation loss')
+plt.figure()
+plt.plot(history.history['loss'], 'b', label='Training loss')
+plt.plot(history.history['val_loss'], 'r', label='Validation loss')
 plt.title('Training and validation loss')
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
