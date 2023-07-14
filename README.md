@@ -1,1 +1,64 @@
-# artist-emulator
+# Artist Emulator
+
+Artist Emulator is a project aimed at creating a deep learning model that can emulate the musical style of a given artist. The model is trained on MIDI files of the artist's compositions and learns to generate new musical sequences in a similar style.
+
+## Project Overview
+
+The project consists of the following components:
+
+1. Data collection: MIDI files of the artist's compositions are collected and used as training data.
+
+2. Data preprocessing: MIDI files are parsed and converted into sequences of musical features, such as notes, durations, intensities, offsets, and rests. These sequences are used as input for training the model.
+
+3. Model training: A deep learning model is constructed using LSTM (Long Short-Term Memory) layers. The model is trained on the preprocessed data to learn the patterns and characteristics of the artist's music.
+
+4. Music generation: Once the model is trained, it can be used to generate new musical sequences that emulate the style of the artist. These sequences can be converted back into MIDI files for further exploration and usage.
+
+## Current Development Status
+
+This project is currently under development. Here are the key points to note:
+
+- The model training and music generation components are being actively developed and optimized.
+- The current version of the model focuses on a single artist, but future updates may include support for multiple artists.
+- The project is being continuously improved to enhance the quality of the generated music and provide more customization options.
+
+## Getting Started
+
+To get started with the project, follow these steps:
+
+1. Install the necessary dependencies by running `yarn`.
+
+2. Collect MIDI files of the artist's compositions and place them in the appropriate input directory.
+
+3. Preprocess the MIDI files by running the preprocessing script. Adjust the script parameters as needed.
+
+4. Train the model by running the training script. Provide the artist name as a command-line argument.
+
+5. Generate new music in the artist's style using the trained model. Customize the music generation process as desired.
+
+## Dependencies
+
+The project requires the following dependencies:
+
+- `@spotify/basic-pitch`: Library for pitch estimation (`pip install @spotify/basic-pitch`)
+- `music21`: Toolkit for computer-aided musicology (`pip install music21`)
+- `scikit-learn`: Machine learning library for data preprocessing (`pip install scikit-learn`)
+- `numpy`: Library for numerical operations (`pip install numpy`)
+- `matplotlib`: Library for data visualization (`pip install matplotlib`)
+
+## Contributions
+
+Contributions to this project are welcome! If you find any issues or have ideas for improvement, feel free to open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). You are free to use, modify, and distribute the code as per the terms of the license.
+
+## Acknowledgments
+
+This project is inspired by the field of music generation and the desire to explore the artistic styles of different musicians through machine learning techniques.
+
+## Contact
+
+For any questions or inquiries, please contact [me](mailto:micahkepe@.com).
+
