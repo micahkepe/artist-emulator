@@ -3,30 +3,32 @@ import sys
 import logging
 from basic_pitch.inference import predict_and_save
 
+# Set up the logger to info level to display informative messages
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=logging.INFO)
 
-# directories
+# Assign input and output directories
 input_directory = sys.argv[1]
 output_directory = sys.argv[2]
 
-# Set to store converted filenames
+# Store converted filenames in a set for faster lookups
 converted_files = set()
 
-# Iterate through all the MIDI files in the output directory
+# Scan through all the MIDI files in the output directory
 for filename in os.listdir(output_directory):
     if filename.endswith("_basic_pitch.mid"):
-        converted_files.add(filename[:-16])  # Remove "_basic_pitch.mid" extension
+        # Save the filename without the extension for future comparison
+        converted_files.add(filename[:-16])
 
-# iterate through all the mp3 files
+# Now, go through all the mp3 files in the input directory
 for filename in os.listdir(input_directory):
     if filename.endswith(".mp3"):
-        # Skip if the file has already been converted
+        # Check if the mp3 file has already been converted by comparing filenames
         if filename[:-4] in converted_files:
             logging.info("Skipping " + filename + " because it has already been converted")
             continue
 
         input_audio_path = os.path.join(input_directory, filename)
-        # basic-pitch transcribes the mp3 to a MIDI file
+        # Transcribe the mp3 to a MIDI file using basic_pitch
         predict_and_save(
             [input_audio_path],
             output_directory,
