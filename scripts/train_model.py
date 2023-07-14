@@ -2,8 +2,8 @@ import os
 import sys
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
 import numpy as np
+from sklearn.preprocessing import LabelEncoder
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout, Activation
 from keras.optimizers import Adam
@@ -18,37 +18,36 @@ artist = sys.argv[1].lower()
 
 # Load the preprocessed data
 logging.info(f"Loading data for {artist}...")
-data = np.load(f'data/{artist}/preprocessed_data.npz', allow_pickle=True)
+data = np.load(f'data/{artist}/processed/processed.npz', allow_pickle=True)
 inputs_train = data['inputs_train']
 inputs_test = data['inputs_test']
 outputs_train = data['outputs_train']
 outputs_test = data['outputs_test']
 
-# Split the data into training and validation sets
-logging.info("Splitting data into training and validation sets...")
-inputs_train, inputs_val, outputs_train, outputs_val = train_test_split(inputs_train, outputs_train, test_size=0.2, random_state=42)
+# Load the note encoder
+note_encoder = LabelEncoder()
+note_encoder.classes_ = np.load(f'data/{artist}/processed/note_encoder.npy')
 
 # Start building the model
 # Hyperparameters
 logging.info("Building the model...")
-number_of_labels = inputs_train.shape[2]  # Number of labels is equal to the number of features
+number_of_labels = len(note_encoder.classes_)  # Number of labels is equal to the number of unique notes, chords, and rests
 num_epochs = 10
 batch_size = 64
-num_classes = number_of_labels
 initial_learning_rate = 0.001
 
 model = Sequential()
-model.add(LSTM(512, input_shape=(inputs_train.shape[1], inputs_train.shape[2]), return_sequences=True, dropout=0.3))
-model.add(LSTM(512, return_sequences=True, dropout=0.3))
-model.add(LSTM(512, dropout=0.3))
-model.add(Dense(num_classes, activation='sigmoid'))  # Sigmoid activation for multi-label classification
+model.add(LSTM(256, input_shape=(inputs_train.shape[1], inputs_train.shape[2]), return_sequences=True, dropout=0.3))  # Decreased number of neurons
+model.add(LSTM(256, return_sequences=True, dropout=0.3))  # Decreased number of neurons
+model.add(LSTM(256, dropout=0.3))  # Decreased number of neurons
+model.add(Dense(number_of_labels, activation='softmax'))  # Softmax activation for multi-class classification
 logging.info(f"Model structure:\n{model.summary()}")
 
 # Learning rate decay schedule
 lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(initial_learning_rate, decay_steps=100000, decay_rate=0.96, staircase=True)
 
 # Compile the model
-model.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), metrics=['accuracy'])
+model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(learning_rate=lr_schedule), metrics=['accuracy'])  # Use categorical_crossentropy for multi-class classification
 logging.info("Model compilation completed.")
 
 # Define callbacks
@@ -58,7 +57,7 @@ callbacks_list = [checkpoint, early_stopping]
 logging.info("Callbacks defined.")
 
 # Train the model
-history = model.fit(inputs_train, outputs_train, validation_data=(inputs_val, outputs_val),
+history = model.fit(inputs_train, outputs_train, validation_split=0.2,  # Use validation_split instead of manually splitting data
                     epochs=num_epochs, batch_size=batch_size, callbacks=callbacks_list, verbose=1)
 logging.info("Model training completed.")
 
@@ -77,9 +76,11 @@ logging.info("History saved.")
 plt.figure()
 plt.plot(history.history['loss'], 'b', label='Training loss')
 plt.plot(history.history['val_loss'], 'r', label='Validation loss')
-plt.title('Training and validation loss')
+plt.plot(history.history['accuracy'], 'g', label='Training accuracy')
+plt.plot(history.history['val_accuracy'], 'y', label='Validation accuracy')
+plt.title('Training and validation loss and accuracy')
 plt.xlabel('Epochs')
-plt.ylabel('Loss')
+plt.ylabel('Loss and Accuracy')
 plt.legend()
 plt.savefig(f'data/{artist}/loss.png')
 plt.show()
