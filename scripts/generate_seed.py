@@ -7,7 +7,7 @@ import random
 artist = sys.argv[1].lower()
 
 # Load the preprocessed data
-data = np.load(f'data/{artist}/preprocessed_data.npz', allow_pickle=True)
+data = np.load(f'data/{artist}/processed/processed.npz', allow_pickle=True)
 inputs_test = data['inputs_test']
 
 # Randomly select a sequence from the testing data
