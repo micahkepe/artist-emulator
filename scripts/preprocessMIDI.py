@@ -18,6 +18,7 @@ test_split = 0.2  # Percentage of data to use for testing
 
 # Initialize lists for data
 notes = []
+elements_type = []
 durations = []
 intensities = []
 offsets = []
@@ -38,18 +39,21 @@ for filename in os.listdir(input_directory):
             for element in piece.flatten():
                 if isinstance(element, note.Note):
                     notes.append(str(element.pitch))
+                    elements_type.append('note')
                     durations.append(element.duration.quarterLength)
                     intensities.append(element.volume.velocity)
                     offsets.append(element.offset)
                     rests.append(0) # default value for no rest
                 elif isinstance(element, chord.Chord):
                     notes.append('.'.join(str(n) for n in element.normalOrder))
+                    elements_type.append('chord')
                     durations.append(element.duration.quarterLength)
                     intensities.append(element.volume.velocity)
                     offsets.append(element.offset)
                     rests.append(0) # default value for no rest
                 elif isinstance(element, note.Rest):
                     notes.append('Rest') # default value for no note
+                    elements_type.append('rest')
                     durations.append(element.duration.quarterLength) # duration of rest
                     intensities.append(0) # default value for no note
                     offsets.append(element.offset) # offset of rest
@@ -58,16 +62,19 @@ for filename in os.listdir(input_directory):
             logging.error(f"Error occurred while parsing {filename}: {str(e)}")
             continue
 
-# Integer encoding for notes
+# Integer encoding for notes and element types
 logging.info("Performing integer encoding...")
 note_encoder = LabelEncoder()
 notes_encoded = note_encoder.fit_transform(notes)
+element_type_encoder = LabelEncoder()
+element_types_encoded = element_type_encoder.fit_transform(elements_type)
 
-# Save the encoding
-logging.info("Saving the encoding...")
+# Save the encodings
+logging.info("Saving the encodings...")
 np.save(os.path.join(output_directory, 'note_encoder.npy'), note_encoder.classes_)
+np.save(os.path.join(output_directory, 'element_type_encoder.npy'), element_type_encoder.classes_)
 
-# Normalization of durations and intensities
+# Normalization of durations, intensities, and offsets
 logging.info("Performing normalization...")
 scaler = MinMaxScaler()
 durations_scaled = scaler.fit_transform(np.array(durations).reshape(-1, 1)).reshape(-1)
@@ -76,20 +83,21 @@ offsets_scaled = scaler.fit_transform(np.array(offsets).reshape(-1, 1)).reshape(
 rests_scaled = scaler.fit_transform(np.array(rests).reshape(-1, 1)).reshape(-1)
 
 print("Notes:", len(notes_encoded))
+print("Element types:", len(element_types_encoded))
 print("Durations:", len(durations_scaled))
 print("Intensities:", len(intensities_scaled))
 print("Offsets:", len(offsets_scaled))
 print("Rests:", len(rests_scaled))
 
 # Generate sequences of input and output data
-# Each input sequence is a list of 5 elements: note, duration, intensity, offset, rest
+# Each input sequence is a list of 6 elements: note, element_type, duration, intensity, offset, rest
 logging.info("Generating sequences of input and output data...")
 inputs = []
 outputs = []
 for i in range(0, len(notes_encoded) - sequence_length, 1):
     input_sequence = []
     for j in range(0, sequence_length):
-        input_sequence.append([notes_encoded[i + j], durations_scaled[i + j], intensities_scaled[i + j], offsets_scaled[i + j], rests_scaled[i + j]])
+        input_sequence.append([notes_encoded[i + j], element_types_encoded[i + j], durations_scaled[i + j], intensities_scaled[i + j], offsets_scaled[i + j], rests_scaled[i + j]])
     inputs.append(input_sequence)
     outputs.append(notes_encoded[i + sequence_length])
 
@@ -105,7 +113,7 @@ else:
 # Reshape the data for LSTM
 inputs = np.array(inputs)
 outputs = np.array(outputs)
-inputs = np.reshape(inputs, (inputs.shape[0], inputs.shape[1], 5)) # 5 features
+inputs = np.reshape(inputs, (inputs.shape[0], inputs.shape[1], 6)) # 6 features
 
 # Split the data
 inputs_train, inputs_test, outputs_train, outputs_test = train_test_split(inputs, outputs, test_size=test_split, random_state=42)
