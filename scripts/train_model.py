@@ -32,7 +32,7 @@ note_encoder.classes_ = np.load(f'data/{artist}/processed/note_encoder.npy')
 # Hyperparameters
 logging.info("Building the model...")
 number_of_labels = len(note_encoder.classes_)  # Number of labels is equal to the number of unique notes, chords, and rests
-num_epochs = 10
+num_epochs = 100
 batch_size = 64
 initial_learning_rate = 0.001
 
