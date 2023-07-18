@@ -5,12 +5,16 @@ import numpy as np
 from music21 import converter, note, chord
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.model_selection import train_test_split
+import time
 
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=logging.INFO)
 
 # Directories
 input_directory = sys.argv[1]
 output_directory = sys.argv[2]
+
+# Create a directory to store the preprocessed data if it doesn't already exist
+os.makedirs(output_directory, exist_ok=True)
 
 # Parameters for preprocessing
 sequence_length = 100  # Length of input sequences
@@ -45,12 +49,13 @@ for filename in os.listdir(input_directory):
                     offsets.append(element.offset)
                     rests.append(0) # default value for no rest
                 elif isinstance(element, chord.Chord):
-                    notes.append('.'.join(str(n) for n in element.normalOrder))
-                    elements_type.append('chord')
-                    durations.append(element.duration.quarterLength)
-                    intensities.append(element.volume.velocity)
-                    offsets.append(element.offset)
-                    rests.append(0) # default value for no rest
+                    for n in element.normalOrder:
+                        notes.append(str(n))
+                        elements_type.append('chord')
+                        durations.append(element.duration.quarterLength)
+                        intensities.append(element.volume.velocity)
+                        offsets.append(element.offset)
+                        rests.append(0) # default value for no rest
                 elif isinstance(element, note.Rest):
                     notes.append('Rest') # default value for no note
                     elements_type.append('rest')
@@ -71,8 +76,9 @@ element_types_encoded = element_type_encoder.fit_transform(elements_type)
 
 # Save the encodings
 logging.info("Saving the encodings...")
-np.save(os.path.join(output_directory, 'note_encoder.npy'), note_encoder.classes_)
-np.save(os.path.join(output_directory, 'element_type_encoder.npy'), element_type_encoder.classes_)
+timestamp = str(int(time.time())) # timestamp for versioning
+np.save(os.path.join(output_directory, f'note_encoder_{timestamp}.npy'), note_encoder.classes_)
+np.save(os.path.join(output_directory, f'element_type_encoder_{timestamp}.npy'), element_type_encoder.classes_)
 
 # Normalization of durations, intensities, and offsets
 logging.info("Performing normalization...")
@@ -82,12 +88,12 @@ intensities_scaled = scaler.fit_transform(np.array(intensities).reshape(-1, 1)).
 offsets_scaled = scaler.fit_transform(np.array(offsets).reshape(-1, 1)).reshape(-1)
 rests_scaled = scaler.fit_transform(np.array(rests).reshape(-1, 1)).reshape(-1)
 
-print("Notes:", len(notes_encoded))
-print("Element types:", len(element_types_encoded))
-print("Durations:", len(durations_scaled))
-print("Intensities:", len(intensities_scaled))
-print("Offsets:", len(offsets_scaled))
-print("Rests:", len(rests_scaled))
+logging.info("Notes:", len(notes_encoded))
+logging.info("Element types:", len(element_types_encoded))
+logging.info("Durations:", len(durations_scaled))
+logging.info("Intensities:", len(intensities_scaled))
+logging.info("Offsets:", len(offsets_scaled))
+logging.info("Rests:", len(rests_scaled))
 
 # Generate sequences of input and output data
 # Each input sequence is a list of 6 elements: note, element_type, duration, intensity, offset, rest
@@ -120,7 +126,7 @@ inputs_train, inputs_test, outputs_train, outputs_test = train_test_split(inputs
 
 # Save the preprocessed data
 try:
-    np.savez(output_directory, inputs_train=inputs_train, outputs_train=outputs_train,
+    np.savez(os.path.join(output_directory, f'preprocessed_data_{timestamp}'), inputs_train=inputs_train, outputs_train=outputs_train,
              inputs_test=inputs_test, outputs_test=outputs_test)
     logging.info(f"Preprocessed data saved to: {output_directory}")
 except Exception as e:
