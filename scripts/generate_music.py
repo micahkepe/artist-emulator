@@ -33,7 +33,7 @@ logging.info("Generating notes...")
 for i in range(500):
     prediction = model.predict(seed, verbose=0)
 
-    index = np.argmax(prediction)
+    index = np.random.choice(range(len(note_encoder.classes_)), p=prediction[0])
     generated_music.append(index)
 
     # Create a new array with the same shape as the other features
@@ -46,14 +46,13 @@ for i in range(500):
     # Reshape the sequence
     seed = np.reshape(seed, (1, seed.shape[0], seed.shape[1]))
 
+# map the generated notes to discrete integers for inverse_transform
+discrete_output = np.round(generated_music).astype(int)
 
 # Get labels from the integer encoding of the generated notes
 logging.info("Getting labels from the integer encoding of the generated notes...")
-known_labels = note_encoder.classes_
-
-
-# Reverse the integer encoding of the generated notes to get notes and chords  
-generated_notes = [note_encoder.inverse_transform([x]) if x in known_labels else 'C' for x in generated_music]
+generated_notes = note_encoder.inverse_transform(discrete_output)
+print('Generated notes:', generated_notes)
 
 # Create a steam object for the generated music
 midi_stream = stream.Stream()
@@ -61,11 +60,17 @@ midi_stream = stream.Stream()
 # Add the notes and chords to the stream object
 logging.info("Adding notes and chords to the stream object...")
 for element in generated_notes:
-    if '.' in generated_notes: # if the element is a chord
+    if element == "":
+        logging.warning("Skipping blank note name.")
+        continue
+    elif '.' in element: # if the element is a chord
         notes_in_chord = element.split('.')
         chord_notes = []
         for current_note in notes_in_chord:
-            new_note = note.Note(int(current_note))
+            if current_note.isdigit():
+                new_note = note.Note(int(current_note))
+            else:
+                new_note = note.Note(current_note)  # directly use pitch notation if it's not a digit
             new_note.storedInstrument = instrument.Piano()
             chord_notes.append(new_note)
         new_chord = chord.Chord(chord_notes)
@@ -75,9 +80,13 @@ for element in generated_notes:
         new_note.storedInstrument = instrument.Piano()
         midi_stream.append(new_note)
     else: # if the element is a note
-        new_note = note.Note(element)
+        if element.isdigit():
+            new_note = note.Note(int(element))
+        else:
+            new_note = note.Note(element)  # directly use pitch notation if it's not a digit
         new_note.storedInstrument = instrument.Piano()
         midi_stream.append(new_note)
+
 
 # Set the tempo of the generated music to 130 bpm
 midi_stream.append(tempo.MetronomeMark(number=130))
