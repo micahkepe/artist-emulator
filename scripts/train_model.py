@@ -9,6 +9,7 @@ from keras.layers import LSTM, Dense, Dropout, Activation
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping, LearningRateScheduler
 import logging
+import time
 
 # Set up logging
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=logging.INFO)
@@ -18,7 +19,7 @@ artist = sys.argv[1].lower()
 
 # Load the preprocessed data
 logging.info(f"Loading data for {artist}...")
-data = np.load(f'data/{artist}/processed/processed.npz', allow_pickle=True)
+data = np.load(f'data/{artist}/preprocessed/preprocessed_data_1689717603.npz', allow_pickle=True) # change this to the latest preprocessed data file
 inputs_train = data['inputs_train']
 inputs_test = data['inputs_test']
 outputs_train = data['outputs_train']
@@ -64,12 +65,15 @@ logging.info("Model training completed.")
 # Evaluate the model
 model.evaluate(inputs_test, outputs_test, batch_size=batch_size)
 
+timestamp = str(int(time.time())) # Get the current timestamp for versioning
 # Save the model
-model.save(f'data/{artist}/models/model.h5')
-logging.info(f"Model saved to data/{artist}/models/model.h5.")
+os.makedirs(f'data/{artist}/models', exist_ok=True)
+model.save(f'data/{artist}/models/model_{timestamp}.h5')
+logging.info(f"Model saved to data/{artist}/models/model_{timestamp}.h5")
 
 # Save the history
-np.savez(f'data/{artist}/history/history.npz', loss=history.history['loss'], val_loss=history.history['val_loss'])
+os.makedirs(f'data/{artist}/history', exist_ok=True)
+np.savez(f'data/{artist}/history/history_{timestamp}.npz', loss=history.history['loss'], val_loss=history.history['val_loss'])
 logging.info("History saved.")
 
 # Plot the loss
