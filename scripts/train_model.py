@@ -19,7 +19,7 @@ artist = sys.argv[1].lower()
 
 # Load the preprocessed data
 logging.info(f"Loading data for {artist}...")
-data = np.load(f'data/{artist}/preprocessed/preprocessed_data_1689717603.npz', allow_pickle=True) # change this to the latest preprocessed data file
+data = np.load(f'data/{artist}/preprocessed/preprocessed_data_1689734573.npz', allow_pickle=True) # change this to the latest preprocessed data file
 inputs_train = data['inputs_train']
 inputs_test = data['inputs_test']
 outputs_train = data['outputs_train']
@@ -27,7 +27,7 @@ outputs_test = data['outputs_test']
 
 # Load the note encoder
 note_encoder = LabelEncoder()
-note_encoder.classes_ = np.load(f'data/{artist}/processed/note_encoder.npy')
+note_encoder.classes_ = np.load(f'data/{artist}/preprocessed/note_encoder_1689734573.npy') # change this to the latest processed data file
 
 # Start building the model
 # Hyperparameters

@@ -10,6 +10,9 @@ logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=loggin
 input_directory = sys.argv[1]
 output_directory = sys.argv[2]
 
+# Create a directory to store the converted MIDI files if it doesn't already exist
+os.makedirs(output_directory, exist_ok=True)
+
 # Store converted filenames in a set for faster lookups
 converted_files = set()
 
