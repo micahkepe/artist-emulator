@@ -3,6 +3,7 @@ import os
 import sys
 import random
 import logging
+import datetime
 
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=logging.INFO)
 
@@ -10,7 +11,7 @@ logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=loggin
 artist = sys.argv[1].lower()
 
 # Load the preprocessed data
-data = np.load(f'data/{artist}/processed/processed.npz', allow_pickle=True)
+data = np.load(f'data/{artist}/preprocessed/preprocessed_data_timestamp.npz', allow_pickle=True) # change this to the latest preprocessed data file
 inputs_test = data['inputs_test']
 logging.info(f"Loaded preprocessed data for {artist}.")
 
@@ -25,7 +26,9 @@ seed = np.array(seed).reshape(1, 100, 6)
 # Create a directory to store the seed if it doesn't already exist
 os.makedirs(f'data/{artist}/seed', exist_ok=True)
 
-# Save the seed
-np.save(f'data/{artist}/seed/seed.npy', seed)
+timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")  # Timestamp for versioning
 
-logging.info(f"Seed generated and saved to data/{artist}/seed/seed.npy.")
+# Save the seed
+np.save(f'data/{artist}/seed/seed_{timestamp}.npy', seed)
+
+logging.info(f"Seed generated and saved to data/{artist}/seed/seed_{timestamp}.npy.")
