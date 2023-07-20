@@ -12,19 +12,19 @@ logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=loggin
 
 # Fetch the artist name from the command line arguments
 artist = sys.argv[1].lower()
-timestamp = sys.argv[2]  # fetch the timestamp from command line arguments
+timestamp = sys.argv[2]  # fetch the timestamp for the model from command line arguments
 
 # Load the seed and the trained model
-seed = np.load(f'data/{artist}/seed/seed_{timestamp}.npy')
+seed = np.load(f'data/{artist}/seed/seed_20230720090243.npy') # change this to the latest seed file
 model = load_model(f'data/{artist}/models/model_{timestamp}.h5')
 logging.info(f"Loaded seed and model for {artist}.")
 
 # Load the preprocessed data
-data = np.load(f'data/{artist}/preprocessed/preprocessed_timestamp.npz', allow_pickle=True) # change this to the latest preprocessed data file
+data = np.load(f'data/{artist}/preprocessed/preprocessed_data_1689734573.npz', allow_pickle=True) # change this to the latest preprocessed data file
 
 # Load the note encoder
 note_encoder = LabelEncoder()
-note_encoder.classes_ = np.load(f'data/{artist}/preprocessed/note_encoder_timestamp.npy') # change this to the latest processed data file
+note_encoder.classes_ = np.load(f'data/{artist}/preprocessed/note_encoder_1689734573.npy') # change this to the latest processed data file
 logging.info(f"Loaded preprocessed data and note encoder for {artist}.")
 
 # Start the generated music with the seed

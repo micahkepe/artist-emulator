@@ -17,7 +17,7 @@ logging.info(f"Loaded seed for {artist}.")
 
 # Load the note encoder
 note_encoder = LabelEncoder()
-note_encoder.classes_ = np.load(f'data/{artist}/preprocessed/note_encoder_timestamp.npy') # change this to the latest processed data file
+note_encoder.classes_ = np.load(f'data/{artist}/preprocessed/note_encoder_1689734573.npy') # change this to the latest processed data file
 logging.info(f"Loaded note encoder for {artist}.")
 
 # map the seed notes to discrete integers for inverse_transform

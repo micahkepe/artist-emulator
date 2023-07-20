@@ -11,7 +11,7 @@ logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=loggin
 artist = sys.argv[1].lower()
 
 # Load the preprocessed data
-data = np.load(f'data/{artist}/preprocessed/preprocessed_data_timestamp.npz', allow_pickle=True) # change this to the latest preprocessed data file
+data = np.load(f'data/{artist}/preprocessed/preprocessed_data_1689734573.npz', allow_pickle=True) # change this to the latest preprocessed data file
 inputs_test = data['inputs_test']
 logging.info(f"Loaded preprocessed data for {artist}.")
 

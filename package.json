@@ -13,6 +13,7 @@
     "preprocessMIDI": "python3 scripts/preprocessMIDI.py",
     "train-model": "python3 scripts/train_model.py",
     "generate-seed": "python3 scripts/generate_seed.py",
+    "preview-seed": "python3 scripts/preview_seed.py",
     "generate-music": "python3 scripts/generate_music.py"
   }
 }
