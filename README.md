@@ -19,7 +19,8 @@ The project consists of the following components:
 This project is currently under development. Here are the key points to note:
 
 - The model training and music generation components are being actively developed and optimized.
-- The current version of the model focuses on a single artist, but future updates may include support for multiple artists.
+- The current version of the model focuses on a single artist, but future updates may include support for multiple artists. 
+- As of now, the dataset used as training data is not publicly available due to licensing restrictions and is only used for non-commercial purposes. If you are interested in the dataset, please contact [me](mailto:micahkepe@gmail.com).
 - The project is being continuously improved to enhance the quality of the generated music and provide more customization options.
 
 ## Getting Started
