@@ -9,7 +9,7 @@ from keras.layers import LSTM, Dense, Dropout, Activation
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping, LearningRateScheduler
 import logging
-import time
+import datetime
 
 # Set up logging
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=logging.INFO)
@@ -65,7 +65,8 @@ logging.info("Model training completed.")
 # Evaluate the model
 model.evaluate(inputs_test, outputs_test, batch_size=batch_size)
 
-timestamp = str(int(time.time())) # Get the current timestamp for versioning
+timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")  # Timestamp for versioning
+
 # Save the model
 os.makedirs(f'data/{artist}/models', exist_ok=True)
 model.save(f'data/{artist}/models/model_{timestamp}.h5')

@@ -5,7 +5,7 @@ import numpy as np
 from music21 import converter, note, chord
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.model_selection import train_test_split
-import time
+import datetime
 
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=logging.INFO)
 
@@ -76,7 +76,7 @@ element_types_encoded = element_type_encoder.fit_transform(elements_type)
 
 # Save the encodings
 logging.info("Saving the encodings...")
-timestamp = str(int(time.time())) # timestamp for versioning
+timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")  # Timestamp for versioning
 np.save(os.path.join(output_directory, f'note_encoder_{timestamp}.npy'), note_encoder.classes_)
 np.save(os.path.join(output_directory, f'element_type_encoder_{timestamp}.npy'), element_type_encoder.classes_)
 
