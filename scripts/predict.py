@@ -11,6 +11,7 @@ from keras.layers import LSTM
 from keras.layers import BatchNormalization as BatchNorm
 from keras.layers import Activation
 import logging
+import datetime
 
 
 def prepare_sequences(notes, pitchnames, n_vocab):
@@ -133,8 +134,15 @@ def generate_notes(model, network_input, pitchnames, n_vocab):
 
 
 def create_midi(prediction_output):
-    """ convert the output from the prediction to notes and create a midi file
-        from the notes """
+    """ 
+    Convert the output from the prediction to notes and create a midi file from the notes
+
+    Args:
+        prediction_output: List of predicted notes
+
+    Returns:
+        None    
+    """
     offset = 0
     output_notes = []
 
@@ -169,7 +177,9 @@ def create_midi(prediction_output):
 
     midi_stream = stream.Stream(output_notes)
 
-    midi_stream.write('midi', fp='test_output.mid')
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    midi_stream.write('midi', fp=f'data/{artist}/output/prediction_{timestamp}.mid')
+    logging.info(f"Prediction saved to data/{artist}/output/prediction_{timestamp}.mid")
 
 
 def generate():
@@ -180,17 +190,25 @@ def generate():
         None
     """
     #load the notes used to train the model
-    with open(f'data/{artist}/notes', 'rb') as filepath:
+    with open(f'data/{artist}/notes/notes_file.pkl', 'rb') as filepath:
         notes = pickle.load(filepath)
+    logging.info(f"Loaded notes from data/{artist}/notes/notes_file.pkl")
 
     # Get all pitch names
     pitchnames = sorted(set(item for item in notes))
     # Get all pitch names
     n_vocab = len(set(notes))
 
+    logging.info(f"Preparing sequences...")
     network_input, normalized_input = prepare_sequences(notes, pitchnames, n_vocab)
+
+    logging.info(f"Creating network...")
     model = create_network(normalized_input, n_vocab)
+
+    logging.info(f"Generating notes...")
     prediction_output = generate_notes(model, network_input, pitchnames, n_vocab)
+
+    logging.info(f"Creating midi file...")
     create_midi(prediction_output)
 
 
@@ -200,5 +218,6 @@ if __name__ == '__main__':
 
     # Fetch the artist name from the command line arguments
     artist = sys.argv[1].lower()
+    logging.info(f"Generating music for {artist}...")
 
     generate()
