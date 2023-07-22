@@ -19,7 +19,17 @@ def get_notes():
         notes: List of notes and chords found in the training midi files
     """
     notes = []
-
+    note_file_path = f'data/{artist}/notes/notes_file.pkl' # change this to the latest notes file
+    
+    # If the notes file exists, load it
+    if os.path.exists(note_file_path):
+        logging.info(f"Loading notes from {note_file_path}...")
+        with open(note_file_path, 'rb') as filepath:
+            notes = pickle.load(filepath)
+        logging.info(f"Notes loaded from {note_file_path}")
+        return notes
+    
+    # If the notes file doesn't exist, create it
     for file in glob.glob(f"data/{artist}/rawMIDI/*.mid"):
 
         # Load the midi file
@@ -44,11 +54,11 @@ def get_notes():
                 notes.append('Rest')
 
     # Save the notes list to a file, creating the data directory if it doesn't exist
-    os.makedirs(os.path.dirname(f'data/{artist}/notes'), exist_ok=True)
+    os.makedirs(os.path.dirname(f'data/{artist}/notes/'), exist_ok=True)
 
-    with open(f'data/{artist}/notes', 'wb') as filepath:
+    with open(note_file_path, 'wb') as filepath:
         pickle.dump(notes, filepath)
-    logging.info(f"Notes saved to data/{artist}/notes")
+    logging.info(f"Notes saved to {note_file_path}")
 
     return notes
 
@@ -167,15 +177,32 @@ def train_network():
     Returns:
         None
     """
+    # Get notes from the midi files in the ./data directory
     notes = get_notes()
 
     # get amount of pitch names
     n_vocab = len(set(notes))
 
+    # prepare sequences used by the Neural Network
     network_input, network_output = prepare_sequences(notes, n_vocab)
 
+    # create a new model 
     model = create_network(network_input, n_vocab)
 
+    # Check if we are starting fresh or using a previous model
+    models_dir = f"data/{artist}/models/"
+    weights_files = glob.glob(f"{models_dir}*.hdf5")
+    if len(weights_files) > 0:
+        # Load the latest weights file
+        try: 
+            latest_weights_file = max(weights_files, key=os.path.getctime)
+            logging.info(f"Loading weights from {latest_weights_file}...")
+            model.load_weights(latest_weights_file)
+        except OSError: 
+            logging.error(f"Unable to load weights from {weights_files[-1]}, exiting.")
+            sys.exit(1)
+    
+    # Train the model
     train(model, network_input, network_output)
 
 
