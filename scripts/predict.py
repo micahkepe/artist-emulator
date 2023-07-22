@@ -1,4 +1,5 @@
 import os
+import glob
 import sys
 import pickle
 import numpy as np
@@ -78,11 +79,18 @@ def create_network(network_input, n_vocab):
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     # Load the weights to each node from the saved model
-    try: 
-        model.load_weights(f'data/{artist}/models/weights.hdf5')
-    except OSError: 
-        logging.error(f"Unable to load weights from data/{artist}/models/weights.hdf5, exiting.")
-        sys.exit(1)
+    models_dir = f"data/{artist}/models/"
+    weights_files = glob.glob(f"{models_dir}*.hdf5")
+    if len(weights_files) > 0:
+        # Load the latest weights file
+        try: 
+            latest_weights_file = max(weights_files, key=os.path.getctime)
+            print(f"Loading weights from {latest_weights_file}...")
+            model.load_weights(latest_weights_file)
+        except OSError: 
+            print(f"Unable to load weights from {weights_files[-1]}, exiting.")
+            sys.exit(1)
+
     return model
 
 
