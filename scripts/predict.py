@@ -1,8 +1,7 @@
-import os
-import glob
-import sys
+""" This module generates notes for a midi file using the
+    trained neural network """
 import pickle
-import numpy as np
+import numpy
 from music21 import instrument, note, stream, chord
 from keras.models import Sequential
 from keras.layers import Dense
@@ -11,21 +10,49 @@ from keras.layers import LSTM
 from keras.layers import BatchNormalization as BatchNorm
 from keras.layers import Activation
 import logging
-import datetime
 
+def generate():
+    """
+    Generate a piano midi file
+
+    Returns:
+        A midi file
+    """
+    #load the notes used to train the model
+    with open('data/bach/data/notes', 'rb') as filepath:
+        notes = pickle.load(filepath)
+
+    logging.info(f"Loaded notes from data/bach/data/notes")
+
+    # Get all pitch names
+    pitchnames = sorted(set(item for item in notes))
+    # Get all pitch names
+    n_vocab = len(set(notes))
+
+    logging.info("Preparing sequences...")
+    network_input, normalized_input = prepare_sequences(notes, pitchnames, n_vocab)
+
+    logging.info("Creating network...")
+    model = create_network(normalized_input, n_vocab)
+
+    logging.info("Generating notes...")
+    prediction_output = generate_notes(model, network_input, pitchnames, n_vocab)
+
+    logging.info("Creating midi file...")
+    create_midi(prediction_output)
 
 def prepare_sequences(notes, pitchnames, n_vocab):
     """ 
-    Prepare the sequences used by the Neural Network 
-    
+    Prepare the sequences used by the Neural Network
+
     Args:
-        notes: List of notes and chords
-        pitchnames: List of unique notes and chords
-        n_vocab: Number of unique notes and chords
+        notes (list): The notes from the midi files
+        pitchnames (list): The unique notes in the midi files
+        n_vocab (int): The number of unique notes
 
     Returns:
-        network_input: Input sequences for the neural network
-        normalized_input: Normalized input sequences for the neural network
+        network_input (list): The input sequences for the Neural Network
+        normalized_input (list): The normalized input sequences for the Neural Network
     """
     # map between notes and integers and back
     note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
@@ -42,23 +69,22 @@ def prepare_sequences(notes, pitchnames, n_vocab):
     n_patterns = len(network_input)
 
     # reshape the input into a format compatible with LSTM layers
-    normalized_input = np.reshape(network_input, (n_patterns, sequence_length, 1))
+    normalized_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
     # normalize input
     normalized_input = normalized_input / float(n_vocab)
 
     return (network_input, normalized_input)
-
 
 def create_network(network_input, n_vocab):
     """ 
     Create the structure of the neural network
 
     Args:
-        network_input: Input sequences for the neural network
-        n_vocab: Number of unique notes and chords
+        network_input (list): The input sequences for the Neural Network
+        n_vocab (int): The number of unique notes
 
     Returns:
-        model: A Keras Sequential model
+        model (keras.model): The Neural Network model  
     """
     model = Sequential()
     model.add(LSTM(
@@ -77,53 +103,46 @@ def create_network(network_input, n_vocab):
     model.add(Dropout(0.3))
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
-    # Load the weights to each node from the saved model
-    models_dir = f"data/{artist}/models/"
-    weights_files = glob.glob(f"{models_dir}*.hdf5")
-    if len(weights_files) > 0:
-        # Load the latest weights file
-        try: 
-            latest_weights_file = max(weights_files, key=os.path.getctime)
-            print(f"Loading weights from {latest_weights_file}...")
-            model.load_weights(latest_weights_file)
-        except OSError: 
-            print(f"Unable to load weights from {weights_files[-1]}, exiting.")
-            sys.exit(1)
+    logging.info("Model summary:", model.summary())
+    logging.info("Compiling model...")
+    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    
+
+    # Load the weights to each node
+    model.load_weights('weights.hdf5') # TODO: Change this to the best weights
 
     return model
 
-
 def generate_notes(model, network_input, pitchnames, n_vocab):
-    """ 
-    Generate notes from the neural network based on a sequence of notes 
+    """
+    Generate notes from the neural network based on a sequence of notes
     
     Args:
-        model: The Keras model
-        network_input: Input sequence of notes
-        pitchnames: List of unique notes and chords
-        n_vocab: Number of unique notes and chords
-
+        model (keras.model): The Neural Network model
+        network_input (list): The input sequences for the Neural Network
+        pitchnames (list): The unique notes in the midi files
+        n_vocab (int): The number of unique notes
+        
     Returns:
-        prediction_output: List of predicted notes
+        prediction_output (list): The predicted notes
     """
     # pick a random sequence from the input as a starting point for the prediction
-    start = np.random.randint(0, len(network_input)-1)
+    start = numpy.random.randint(0, len(network_input)-1)
 
     int_to_note = dict((number, note) for number, note in enumerate(pitchnames))
 
     pattern = network_input[start]
     prediction_output = []
 
-    # generate 500 notes, change this to generate longer songs
+    # generate 500 notes
     for note_index in range(500):
-        prediction_input = np.reshape(pattern, (1, len(pattern), 1))
+        prediction_input = numpy.reshape(pattern, (1, len(pattern), 1))
         prediction_input = prediction_input / float(n_vocab)
 
         prediction = model.predict(prediction_input, verbose=0)
 
-        index = np.argmax(prediction)
+        index = numpy.argmax(prediction)
         result = int_to_note[index]
         prediction_output.append(result)
 
@@ -132,16 +151,15 @@ def generate_notes(model, network_input, pitchnames, n_vocab):
 
     return prediction_output
 
-
 def create_midi(prediction_output):
     """ 
-    Convert the output from the prediction to notes and create a midi file from the notes
-
+    Convert the output from the prediction to notes and create a midi file
+    
     Args:
-        prediction_output: List of predicted notes
-
+        prediction_output (list): The predicted notes
+        
     Returns:
-        None    
+        midi_stream (midi): A midi file with the predicted notes
     """
     offset = 0
     output_notes = []
@@ -159,12 +177,6 @@ def create_midi(prediction_output):
             new_chord = chord.Chord(notes)
             new_chord.offset = offset
             output_notes.append(new_chord)
-        # pattern is a rest
-        elif pattern == 'Rest':
-            new_note = note.Rest()
-            new_note.offset = offset
-            new_note.storedInstrument = instrument.Piano()
-            output_notes.append(new_note)
         # pattern is a note
         else:
             new_note = note.Note(pattern)
@@ -177,47 +189,9 @@ def create_midi(prediction_output):
 
     midi_stream = stream.Stream(output_notes)
 
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    midi_stream.write('midi', fp=f'data/{artist}/output/prediction_{timestamp}.mid')
-    logging.info(f"Prediction saved to data/{artist}/output/prediction_{timestamp}.mid")
-
-
-def generate():
-    """ 
-    Generate a piano midi file 
-
-    Returns:
-        None
-    """
-    #load the notes used to train the model
-    with open(f'data/{artist}/notes/notes_file.pkl', 'rb') as filepath:
-        notes = pickle.load(filepath)
-    logging.info(f"Loaded notes from data/{artist}/notes/notes_file.pkl")
-
-    # Get all pitch names
-    pitchnames = sorted(set(item for item in notes))
-    # Get all pitch names
-    n_vocab = len(set(notes))
-
-    logging.info(f"Preparing sequences...")
-    network_input, normalized_input = prepare_sequences(notes, pitchnames, n_vocab)
-
-    logging.info(f"Creating network...")
-    model = create_network(normalized_input, n_vocab)
-
-    logging.info(f"Generating notes...")
-    prediction_output = generate_notes(model, network_input, pitchnames, n_vocab)
-
-    logging.info(f"Creating midi file...")
-    create_midi(prediction_output)
-
+    midi_stream.write('midi', fp='test_output.mid')
 
 if __name__ == '__main__':
-    # Set up logging    
     logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=logging.INFO)
-
-    # Fetch the artist name from the command line arguments
-    artist = sys.argv[1].lower()
-    logging.info(f"Generating music for {artist}...")
 
     generate()

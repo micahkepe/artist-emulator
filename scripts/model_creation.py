@@ -1,40 +1,66 @@
+""" This module prepares midi file data and feeds it to the neural
+    network for training """
 import glob
-import sys 
-import os
 import pickle
-import numpy as np
+import numpy
 from music21 import converter, instrument, note, chord
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, LSTM, Activation, BatchNormalization as BatchNorm
+from keras.layers import Dense
+from keras.layers import Dropout
+from keras.layers import LSTM
+from keras.layers import Activation
+from keras.layers import BatchNormalization as BatchNorm
 from keras.utils import to_categorical as np_utils
 from keras.callbacks import ModelCheckpoint
 import logging
+import os
 
+def train_network():
+    """
+    Train a Neural Network to generate music
+
+    Args:
+        None
+
+    Returns:
+        None 
+    """
+    notes = get_notes()
+
+    # get amount of pitch names
+    n_vocab = len(set(notes))
+
+    network_input, network_output = prepare_sequences(notes, n_vocab)
+
+    model = create_network(network_input, n_vocab)
+
+    train(model, network_input, network_output)
 
 def get_notes():
     """ 
-    Get all the notes and chords from the midi files in the ./data directory
+    Get all the notes and chords from the midi files in the right directory
+
+    Args:
+        None
 
     Returns:
-        notes: List of notes and chords found in the training midi files
+        notes (list): All the notes and chords from the midi files
     """
     notes = []
-    note_file_path = f'data/{artist}/notes/notes_file.pkl' # change this to the latest notes file
-    
-    # If the notes file exists, load it
-    if os.path.exists(note_file_path):
-        logging.info(f"Loading notes from {note_file_path}...")
-        with open(note_file_path, 'rb') as filepath:
-            notes = pickle.load(filepath)
-        logging.info(f"Notes loaded from {note_file_path}")
-        return notes
-    
-    # If the notes file doesn't exist, create it
-    for file in glob.glob(f"data/{artist}/rawMIDI/*.mid"):
 
-        # Load the midi file
+    # check if notes have already been saved to file
+    if os.path.exists('data/bach/data/notes'):
+        if os.path.getsize('data/bach/data/notes') > 0:
+            logging.info("Loading notes from data/notes")
+            with open('data/bach/data/notes', 'rb') as filepath:
+                notes = pickle.load(filepath)
+            logging.info("Notes loaded from data/notes")
+            return notes
+    
+    for file in glob.glob("data/bach/midi/*.mid"):
         midi = converter.parse(file)
-        logging.info(f"Parsing {file}...")
+
+        logging.info("Parsing %s" % file)
 
         notes_to_parse = None
 
@@ -44,36 +70,29 @@ def get_notes():
         except: # file has notes in a flat structure
             notes_to_parse = midi.flat.notes
 
-        # Loop through all the notes and chords and add them to the notes list
         for element in notes_to_parse:
             if isinstance(element, note.Note):
                 notes.append(str(element.pitch))
             elif isinstance(element, chord.Chord):
                 notes.append('.'.join(str(n) for n in element.normalOrder))
-            elif isinstance(element, note.Rest):
-                notes.append('Rest')
 
-    # Save the notes list to a file, creating the data directory if it doesn't exist
-    os.makedirs(os.path.dirname(f'data/{artist}/notes/'), exist_ok=True)
-
-    with open(note_file_path, 'wb') as filepath:
+    with open('data/bach/data/notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
-    logging.info(f"Notes saved to {note_file_path}")
+        logging.info(f"Notes saved to data/notes")
 
     return notes
 
-
 def prepare_sequences(notes, n_vocab):
-    """ 
+    """
     Prepare the sequences used by the Neural Network
     
     Args:
-        notes: List of notes and chords
-        n_vocab: Number of unique notes and chords in the notes list
-
+        notes (list): The notes from the midi files
+        n_vocab (int): The number of unique notes
+        
     Returns:
-        network_input: Input sequences for the neural network
-        network_output: Output sequences for the neural network
+        network_input (list): The input sequences for the Neural Network
+        network_output (list): The output sequences for the Neural Network
     """
     sequence_length = 100
 
@@ -93,32 +112,28 @@ def prepare_sequences(notes, n_vocab):
         network_input.append([note_to_int[char] for char in sequence_in])
         network_output.append(note_to_int[sequence_out])
 
-    # get amount of pitch names
     n_patterns = len(network_input)
 
     # reshape the input into a format compatible with LSTM layers
-    network_input = np.reshape(network_input, (n_patterns, sequence_length, 1))
-    # normalize input between 0 and 1
+    network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
+    # normalize input
     network_input = network_input / float(n_vocab)
 
-    # one hot encode the output vectors
     network_output = np_utils(network_output)
 
     return (network_input, network_output)
 
-
 def create_network(network_input, n_vocab):
-    """ 
-    Create the structure of the neural network
-    
-    Args:
-        network_input: Input sequences for the neural network
-        n_vocab: Number of unique notes and chords in the notes list
-        
-    Returns:
-        model: Sequential model built with Keras
     """
-    # Create the structure of the neural network
+    Create the structure of the neural network
+
+    Args:
+        network_input (list): The input sequences for the Neural Network
+        n_vocab (int): The number of unique notes
+
+    Returns:
+        model (keras.model): The Keras model of the neural network
+    """
     model = Sequential()
     model.add(LSTM(
         512,
@@ -138,24 +153,21 @@ def create_network(network_input, n_vocab):
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
-    logging.info(f"Model structure:\n{model.summary()}")
-
     return model
-
 
 def train(model, network_input, network_output):
     """ 
     Train the neural network
 
     Args:
-        model: The neural network model created with Keras
-        network_input: Input sequences for the neural network
-        network_output: Output sequences for the neural network
+        model (keras.model): The Keras model of the neural network
+        network_input (list): The input sequences for the Neural Network
+        network_output (list): The output sequences for the Neural Network
 
     Returns:
         None
     """
-    filepath = f"data/{artist}/models/weights-improvement-{{epoch:02d}}-{{loss:.4f}}-bigger.hdf5"
+    filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
         monitor='loss',
@@ -165,52 +177,8 @@ def train(model, network_input, network_output):
     )
     callbacks_list = [checkpoint]
 
-    # Train the model and save the weights whenever the loss decreases
     model.fit(network_input, network_output, epochs=200, batch_size=128, callbacks=callbacks_list)
 
-
-def train_network():
-    """ 
-    Train a Neural Network to generate music 
-    Args:
-        None
-    Returns:
-        None
-    """
-    # Get notes from the midi files in the ./data directory
-    notes = get_notes()
-
-    # get amount of pitch names
-    n_vocab = len(set(notes))
-
-    # prepare sequences used by the Neural Network
-    network_input, network_output = prepare_sequences(notes, n_vocab)
-
-    # create a new model 
-    model = create_network(network_input, n_vocab)
-
-    # Check if we are starting fresh or using a previous model
-    models_dir = f"data/{artist}/models/"
-    weights_files = glob.glob(f"{models_dir}*.hdf5")
-    if len(weights_files) > 0:
-        # Load the latest weights file
-        try: 
-            latest_weights_file = max(weights_files, key=os.path.getctime)
-            logging.info(f"Loading weights from {latest_weights_file}...")
-            model.load_weights(latest_weights_file)
-        except OSError: 
-            logging.error(f"Unable to load weights from {weights_files[-1]}, exiting.")
-            sys.exit(1)
-    
-    # Train the model
-    train(model, network_input, network_output)
-
-
 if __name__ == '__main__':
-    # Set up logging
     logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=logging.INFO)
-
-    # Fetch the artist name from the command line arguments
-    artist = sys.argv[1].lower()
-
     train_network()
