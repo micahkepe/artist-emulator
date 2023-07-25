@@ -55,9 +55,16 @@ Contributions to this project are welcome! If you find any issues or have ideas 
 
 This project is licensed under the [MIT License](LICENSE). You are free to use, modify, and distribute the code as per the terms of the license.
 
-## Acknowledgments
 
-This project is inspired by the field of music generation and the desire to explore the artistic styles of different musicians through machine learning techniques.
+## References
+
+Some websites that I found helpful in understanding the LSTM model are listed below:
+- [Understanding LSTM Networks](https://colah.github.io/posts/2015-08-Understanding-LSTMs/)
+- [Understanding LSTM and its diagrams](https://medium.com/mlreview/understanding-lstm-and-its-diagrams-37e2f46f1714)
+- [RNN Wikipedia Page](https://en.wikipedia.org/wiki/Recurrent_neural_network)
+- [LTSM Wikipedia Page](https://en.wikipedia.org/wiki/Long_short-term_memory)
+
+Additionally, this project uses insights from the article ["How to generate music using a LSTM neural network in Keras"](https://towardsdatascience.com/how-to-generate-music-using-a-lstm-neural-network-in-keras-68786834d4c5) by Sigurður Skúli. 
 
 ## Contact
 
