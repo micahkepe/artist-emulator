@@ -9,7 +9,7 @@
     "@spotify/basic-pitch": "^1.0.1"
   },
   "scripts": {
-    "convertToMIDI": "python3 scripts/convertToMIDI.py",
+    "convert-to-midi": "python3 scripts/convert_to_midi.py",
     "create-model": "python3 scripts/model_creation.py",
     "predict": "python3 scripts/predict.py"
   }
