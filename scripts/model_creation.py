@@ -14,6 +14,7 @@ from keras.utils import to_categorical as np_utils
 from keras.callbacks import ModelCheckpoint
 import logging
 import os
+import re
 
 def train_network():
     """
@@ -34,7 +35,21 @@ def train_network():
 
     model = create_network(network_input, n_vocab)
 
-    train(model, network_input, network_output)
+    # Fetch the latest weights file if it exists
+    start_epoch = 0
+    weight_files = glob.glob("weights-improvement-*-bigger.hdf5", recursive=True)
+    if weight_files:
+        # Sort the files with natural sorting
+        weight_files = sorted(weight_files, key=lambda name: int(re.findall(r"-([0-9]{1,3})-", name)[0]))
+        latest_weights = weight_files[-1]  # get the last file
+        model.load_weights(latest_weights)
+        logging.info(f"Loaded weights from file: {latest_weights}")
+        
+        # Extract the epoch number from the filename
+        start_epoch = int(re.findall(r"-([0-9]{1,3})-", latest_weights)[0])
+        logging.info(f"Starting from epoch: {start_epoch}")
+
+    train(model, network_input, network_output, start_epoch)
 
 def get_notes():
     """ 
@@ -155,7 +170,7 @@ def create_network(network_input, n_vocab):
 
     return model
 
-def train(model, network_input, network_output):
+def train(model, network_input, network_output, start_epoch=0):
     """ 
     Train the neural network
 
@@ -163,6 +178,7 @@ def train(model, network_input, network_output):
         model (keras.model): The Keras model of the neural network
         network_input (list): The input sequences for the Neural Network
         network_output (list): The output sequences for the Neural Network
+        start_epoch (int): The epoch number to start training from
 
     Returns:
         None
@@ -177,7 +193,7 @@ def train(model, network_input, network_output):
     )
     callbacks_list = [checkpoint]
 
-    model.fit(network_input, network_output, epochs=200, batch_size=128, callbacks=callbacks_list)
+    model.fit(network_input, network_output, epochs=200, batch_size=128, callbacks=callbacks_list, initial_epoch=start_epoch)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=logging.INFO)
