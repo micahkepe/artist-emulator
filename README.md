@@ -27,15 +27,15 @@ This project is currently under development. Here are the key points to note:
 
 To get started with the project, follow these steps:
 
-1. Install the necessary dependencies by running `yarn`.
+1. Install the necessary dependencies by running `pip install -r requirements.txt`.
 
-2. Collect MIDI files of the artist's compositions and place them in the appropriate input directory.
+2. Collect MIDI and/or MP3 files of the artist's compositions and place them in an appropriate input directory.
 
-3. Preprocess the MIDI files by running the preprocessing script. Adjust the script parameters as needed.
+3. Process any MP3 files of the artist's compositions into MIDI files using the `convert_to_midi.py` script. Provide the input and output directories as command-line arguments.
 
-4. Train the model by running the training script. Provide the artist name as a command-line argument.
+4. Train the model by running the `model_creation.py` script. Change the specified paths in the script to match your local directories. Adjust the hyperparameters and architecture as desired.
 
-5. Generate new music in the artist's style using the trained model. Customize the music generation process as desired.
+5. Generate new music in the artist's style using the trained model with the `predict.py` script. Customize the music generation process as desired. Again, change the specified paths in the script to match your local directories.
 
 ## Dependencies
 
