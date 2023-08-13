@@ -2,7 +2,7 @@
 node_modules
 
 # data (for now)
-data
+data/bach/data/private
 
 # vscode settings
 .vscode
