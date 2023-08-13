@@ -12,15 +12,16 @@ The project consists of the following components:
 
 3. Model training: A deep learning model is constructed using LSTM (Long Short-Term Memory) layers. The model is trained on the preprocessed data to learn the patterns and characteristics of the artist's music.
 
-4. Music generation: Once the model is trained, it can be used to generate new musical sequences that emulate the style of the artist. These sequences can be converted back into MIDI files for further exploration and usage.
+4. Saving model weights: After training, the latest model weights are saved, enabling users to resume training or use the model for generation without retraining.
+
+5. Music generation: Once the model is trained, it can be used to generate new musical sequences that emulate the style of the artist. These sequences can be converted back into MIDI files for further exploration and usage.
 
 ## Current Development Status
 
 This project is currently under development. Here are the key points to note:
 
 - The model training and music generation components are being actively developed and optimized.
-- The current version of the model focuses on a single artist, but future updates may include support for multiple artists. 
-- As of now, the dataset used as training data is not publicly available due to licensing restrictions and is only used for non-commercial purposes. If you are interested in the dataset, please contact [me](mailto:micahkepe@gmail.com).
+- The current version of the model focuses on a single artist, Bach, but future updates may include support for multiple artists. 
 - The project is being continuously improved to enhance the quality of the generated music and provide more customization options.
 
 ## Getting Started
@@ -33,7 +34,7 @@ To get started with the project, follow these steps:
 
 3. Process any MP3 files of the artist's compositions into MIDI files using the `convert_to_midi.py` script. Provide the input and output directories as command-line arguments.
 
-4. Train the model by running the `model_creation.py` script. Change the specified paths in the script to match your local directories. Adjust the hyperparameters and architecture as desired.
+4. Train the model by running the `model_creation.py` script. Change the specified paths in the script to match your local directories. Adjust the hyperparameters and architecture as desired. After training, the latest model weights will be saved in the specified directory.
 
 5. Generate new music in the artist's style using the trained model with the `predict.py` script. Customize the music generation process as desired. Again, change the specified paths in the script to match your local directories.
 
@@ -46,6 +47,7 @@ The project requires the following dependencies:
 - `scikit-learn`: Machine learning library for data preprocessing (`pip install scikit-learn`)
 - `numpy`: Library for numerical operations (`pip install numpy`)
 - `matplotlib`: Library for data visualization (`pip install matplotlib`)
+- `h5py`: Library to save and load model weights in the HDF5 format (`pip install h5py`)
 
 ## Contributions
 
