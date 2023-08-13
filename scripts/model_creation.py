@@ -37,7 +37,7 @@ def train_network():
 
     # Fetch the latest weights file if it exists
     start_epoch = 0
-    weight_files = glob.glob("weights-improvement-*-bigger.hdf5", recursive=True)
+    weight_files = glob.glob("data/bach/models/weights-improvement-*-bigger.hdf5", recursive=True)
     if weight_files:
         # Sort the files with natural sorting
         weight_files = sorted(weight_files, key=lambda name: int(re.findall(r"-([0-9]{1,3})-", name)[0]))
@@ -64,7 +64,7 @@ def get_notes():
     notes = []
 
     # check if notes have already been saved to file
-    if os.path.exists('data/bach/data/notes'):
+    if os.path.exists('data/bach/data/notes'): # change path if needed
         if os.path.getsize('data/bach/data/notes') > 0:
             logging.info("Loading notes from data/notes")
             with open('data/bach/data/notes', 'rb') as filepath:
@@ -183,7 +183,7 @@ def train(model, network_input, network_output, start_epoch=0):
     Returns:
         None
     """
-    filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
+    filepath = "data/bach/models/weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
         monitor='loss',

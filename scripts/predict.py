@@ -109,8 +109,8 @@ def create_network(network_input, n_vocab):
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     
 
-    # Load the weights to each node
-    model.load_weights('weights.hdf5') # TODO: Change this to the best weights
+    # Load the weights to each node using the latest weights
+    model.load_weights('data/bach/models/weights-improvement-200-1.8771-bigger.hdf5') # Change this to the latest weights or version you want to use
 
     return model
 
@@ -189,7 +189,7 @@ def create_midi(prediction_output):
 
     midi_stream = stream.Stream(output_notes)
 
-    midi_stream.write('midi', fp='test_output.mid')
+    midi_stream.write('midi', fp='data/bach/output/test_output.mid')
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(levelname)s:%(asctime)s:%(message)s', level=logging.INFO)
